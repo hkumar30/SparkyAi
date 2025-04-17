@@ -1,4 +1,5 @@
 # Sparky AI: Make Writing Fun Again
+[![Netlify Status](https://api.netlify.com/api/v1/badges/5e626def-9390-4c02-8085-2858b9ea051d/deploy-status)](https://app.netlify.com/sites/sparkifyai/deploys)
 
 Sparky AI is an educational writing assistant that gamifies the process of writing, designed primarily for college students, particularly freshmen and international students. It offers an engaging and interactive way to improve writing skills through gamification, challenges, and instant feedback.
 
