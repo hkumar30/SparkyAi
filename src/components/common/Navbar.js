@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaBolt, FaSignOutAlt, FaTrophy, FaUserCircle, FaMedal } from 'react-icons/fa';
+import { FaBolt, FaSignOutAlt, FaTrophy, FaUserCircle, FaMedal, FaHome } from 'react-icons/fa';
 import { auth } from '../../firebase/config';
 import { signOut } from 'firebase/auth';
 import Button from './Button';
+import { useAuth } from '../../contexts/AuthContext';
 
 const NavbarContainer = styled.nav`
   display: flex;
@@ -49,6 +50,7 @@ const NavLinks = styled.div`
     background-color: white;
     padding: ${props => props.theme.spacing.md};
     box-shadow: ${props => props.theme.boxShadow.md};
+    z-index: 10;
   }
 `;
 
@@ -90,43 +92,32 @@ const UserControls = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.md};
-`;
-
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: ${props => props.theme.colors.lightGrey};
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
-  border-radius: ${props => props.theme.borderRadius.md};
-  
-  .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: ${props => props.theme.colors.primary};
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    margin-right: ${props => props.theme.spacing.sm};
-  }
-  
-  .name {
-    font-weight: 600;
-    color: ${props => props.theme.colors.darkText};
-  }
   
   @media (max-width: 768px) {
     width: 100%;
-    margin-bottom: ${props => props.theme.spacing.sm};
+    flex-direction: column;
+    align-items: flex-start;
   }
 `;
 
-const Navbar = ({ user }) => {
+const ProfileAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: ${props => props.theme.colors.primary};
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-right: ${props => props.theme.spacing.xs};
+`;
+
+const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   
   const handleLogout = async () => {
     try {
@@ -158,45 +149,49 @@ const Navbar = ({ user }) => {
       
       <NavLinks mobileOpen={mobileOpen}>
         <NavLink to="/" active={isActive('/')}>
-          Home
+          <FaHome size={16} /> Home
         </NavLink>
         
-        <NavLink to="/leaderboard" active={isActive('/leaderboard')}>
-          <FaTrophy size={16} /> Leaderboard
-        </NavLink>
-        
-        <NavLink to="/achievements" active={isActive('/achievements')}>
-          <FaMedal size={16} /> Achievements
-        </NavLink>
-        
-        {user ? (
+        {currentUser ? (
+          // Navigation links for logged-in users
           <>
-            <UserInfo>
-              <div className="avatar">
-                {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-              </div>
-              <div className="name">
-                Welcome, {user.displayName || user.email.split('@')[0]}!
-              </div>
-            </UserInfo>
+            <NavLink to="/leaderboard" active={isActive('/leaderboard')}>
+              <FaTrophy size={16} /> Leaderboard
+            </NavLink>
             
-            <Button
-              variant="outline"
-              size="small"
-              onClick={handleLogout}
-              icon={<FaSignOutAlt />}
-            >
-              Logout
-            </Button>
+            <NavLink to="/achievements" active={isActive('/achievements')}>
+              <FaMedal size={16} /> Achievements
+            </NavLink>
+            
+            <NavLink to="/profile" active={isActive('/profile')}>
+              <FaUserCircle size={16} /> Profile
+            </NavLink>
+            
+            <UserControls>
+              <Button
+                variant="outline"
+                size="small"
+                onClick={handleLogout}
+                icon={<FaSignOutAlt />}
+              >
+                Logout
+              </Button>
+            </UserControls>
           </>
         ) : (
+          // Navigation links for non-logged-in users
           <>
             <NavLink to="/login" active={isActive('/login')}>
               Login
             </NavLink>
-            <NavLink to="/register" active={isActive('/register')}>
-              <Button variant="primary" size="small">Sign Up</Button>
-            </NavLink>
+            
+            <Button 
+              onClick={() => navigate('/register')}
+              variant="primary" 
+              size="small"
+            >
+              Sign Up
+            </Button>
           </>
         )}
       </NavLinks>
