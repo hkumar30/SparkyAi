@@ -19,9 +19,9 @@ const theme = {
     darkGrey: '#9E9E9E',
   },
   fonts: {
-    heading: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif", // ASU-like font for headings
-    body: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",    // ASU-like font for body text
-    accent: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",  // ASU-like font for accents
+    heading: "'neue-haas-grotesk-display', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+    body: "'neue-haas-grotesk-text', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+    accent: "'neue-haas-grotesk-display', 'Helvetica Neue', Helvetica, Arial, sans-serif",
   },
   spacing: {
     xs: '0.25rem',
