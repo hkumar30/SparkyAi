@@ -92,6 +92,11 @@ const QuickLearning = () => {
   const [sprintResponse, setSprintResponse] = useState("");
   const [isGracePeriod, setIsGracePeriod] = useState(false);
   
+  // State for Process Writing
+  const [processWritingActive, setProcessWritingActive] = useState(false);
+  const [processWritingStep, setProcessWritingStep] = useState(0);
+  const [writingTopic, setWritingTopic] = useState("");
+  
   const timerRef = useRef(null);
 
   // Load chat history when component mounts
@@ -247,8 +252,79 @@ const QuickLearning = () => {
       
       // Award points for interaction
       updatePoints(2);
+      
+      return aiResponse;
     } catch (error) {
       console.error('Error generating AI response:', error);
+      throw error;
+    }
+  };
+  
+  // Process AI response specifically for Process Writing
+  const processWritingResponse = async (userText, step) => {
+    try {
+      let systemMessage = "";
+      let prompt = "";
+      
+      // Different prompts based on the current step of the process writing
+      switch (step) {
+        case 0: // Initial - User has provided topic
+          systemMessage = `You are Sparky AI, an educational writing assistant helping a college student with process writing. The student has shared a potential topic. Ask ONE focused question to help them narrow down their topic. Focus on understanding the scope, purpose, or angle of their writing. Don't overwhelm them with multiple questions - just ONE clear question to help them refine their topic.`;
+          prompt = `The student is interested in writing about: "${userText}". Ask ONE focused question to help them refine their topic.`;
+          break;
+          
+        case 1: // Follow-up on topic refinement
+          systemMessage = `You are Sparky AI, helping a student with process writing. The student has refined their topic. Now, ask ONE question about their intended audience and purpose for writing this piece.`;
+          prompt = `Topic: "${writingTopic}". The student provided additional information: "${userText}". Ask ONE question about audience and purpose.`;
+          break;
+          
+        case 2: // Getting information about audience/purpose
+          systemMessage = `You are Sparky AI, helping with process writing. The student has provided information about their audience and purpose. Now, ask ONE question about what main points or arguments they're considering including.`;
+          prompt = `Topic: "${writingTopic}". The student's audience/purpose: "${userText}". Ask ONE question about potential main points or arguments they want to make.`;
+          break;
+          
+        case 3: // Getting main points/arguments
+          systemMessage = `You are Sparky AI, helping with process writing. The student has shared their potential main points or arguments. Help them organize these ideas into a potential outline structure. Give them 3-5 main sections with brief explanations of what could go in each. Remember, you're guiding them, not writing the essay for them.`;
+          prompt = `Topic: "${writingTopic}". Main points: "${userText}". Provide a helpful outline structure with 3-5 sections.`;
+          break;
+          
+        case 4: // Providing final tips
+          systemMessage = `You are Sparky AI, helping with process writing. The student has worked through the writing process. Provide them with 3-5 helpful tips specific to their topic for drafting their essay. Focus on organization, clarity, evidence, and style. Remind them that these are suggestions to guide their own writing, not to write the essay for them.`;
+          prompt = `Topic: "${writingTopic}". The student is ready to start drafting. Provide 3-5 specific writing tips to help them with their draft. Focus on their specific topic and the information they've shared throughout this process.`;
+          break;
+          
+        default:
+          systemMessage = `You are Sparky AI, an educational writing assistant designed to help college students improve their writing skills. You are in "Quick Learning" mode, focusing on Process Writing. Be friendly, encouraging, and helpful.`;
+          prompt = userText;
+      }
+      
+      // Get AI response from OpenAI
+      const aiResponse = await sendMessageToOpenAI(systemMessage, prompt);
+      
+      // Add AI message to state
+      const botMessage = {
+        id: `bot-${Date.now()}`,
+        text: aiResponse,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, botMessage]);
+      
+      // Save bot message to Firestore
+      const chatRef = collection(db, 'users', currentUser.uid, 'quickLearningChats');
+      await addDoc(chatRef, {
+        content: aiResponse,
+        sender: 'bot',
+        timestamp: serverTimestamp()
+      });
+      
+      // Award points for interaction
+      updatePoints(2);
+      
+      return aiResponse;
+    } catch (error) {
+      console.error('Error generating AI response for process writing:', error);
       throw error;
     }
   };
@@ -283,9 +359,31 @@ const QuickLearning = () => {
         updateMetrics({ wordsWritten: wordCount });
       }
       
-      // Process AI response
+      // Process AI response based on whether we're in process writing mode
       setIsLoading(true);
-      await processAIResponse(text);
+      
+      if (processWritingActive) {
+        // If we're just starting, save the topic
+        if (processWritingStep === 0) {
+          setWritingTopic(text);
+        }
+        
+        // Get response for current step
+        await processWritingResponse(text, processWritingStep);
+        
+        // Move to next step
+        setProcessWritingStep(prevStep => {
+          // If we're at the last step, end process writing mode
+          if (prevStep >= 4) {
+            setProcessWritingActive(false);
+            return 0;
+          }
+          return prevStep + 1;
+        });
+      } else {
+        // Regular response
+        await processAIResponse(text);
+      }
       
       // Check for achievements
       checkForAchievements();
@@ -329,8 +427,28 @@ const QuickLearning = () => {
         break;
         
       case "Process Writing":
-        promptText = "I'd like to work on a longer writing project step by step. Can you guide me through the writing process from planning to final draft?";
-        await handleSendMessage(promptText);
+        // Start process writing mode
+        setProcessWritingActive(true);
+        setProcessWritingStep(0);
+        setWritingTopic("");
+        
+        // Send initial message to explain process writing
+        const initialMessage = {
+          id: `bot-${Date.now()}`,
+          text: "Let's work through your writing process step by step. I'll guide you with questions to help develop your ideas. First, please share what topic or assignment you're working on. Be as specific as possible about what you want to write about.",
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, initialMessage]);
+        
+        // Save bot message to Firestore
+        const chatRef = collection(db, 'users', currentUser.uid, 'quickLearningChats');
+        await addDoc(chatRef, {
+          content: initialMessage.text,
+          sender: 'bot',
+          timestamp: serverTimestamp()
+        });
         break;
         
       default:
