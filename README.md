@@ -107,14 +107,17 @@ npm run build
 sparky-ai/
 ├── public/
 │   ├── index.html
-│   └── ...
+│   ├── manifest.json
+│   └── favicon.ico
 ├── src/
 │   ├── components/
-│   │   ├── common/
-│   │   │   ├── Button.js
-│   │   │   └── Navbar.js
-│   │   └── chat/
-│   │       └── ChatLayout.js
+│   │   ├── chat/
+│   │   │   ├── ChatLayout.js
+│   │   │   └── ThinkingIndicator.js
+│   │   └── common/
+│   │       ├── AccessibilityControls.js
+│   │       ├── Button.js
+│   │       └── Navbar.js
 │   ├── contexts/
 │   │   └── AuthContext.js
 │   ├── firebase/
@@ -125,11 +128,16 @@ sparky-ai/
 │   │   ├── Home.js
 │   │   ├── Leaderboard.js
 │   │   ├── Login.js
+│   │   ├── Profile.js
 │   │   ├── QuickLearning.js
 │   │   └── Register.js
+│   ├── services/
+│   │   └── openaiService.js
 │   ├── styles/
 │   │   ├── GlobalStyles.js
 │   │   └── theme.js
+│   ├── utils/
+│   │   └── authUtils.js
 │   ├── App.js
 │   └── index.js
 ├── .env
