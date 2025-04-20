@@ -19,9 +19,9 @@ const theme = {
     darkGrey: '#9E9E9E',
   },
   fonts: {
-    heading: "'Playfair Display', serif", // Classic font for headings
-    body: "'Source Sans Pro', sans-serif", // Clean, readable font for body text
-    accent: "'Montserrat', sans-serif", // Modern font for buttons and accents
+    heading: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif", // ASU-like font for headings
+    body: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",    // ASU-like font for body text
+    accent: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",  // ASU-like font for accents
   },
   spacing: {
     xs: '0.25rem',

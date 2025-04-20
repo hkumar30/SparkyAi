@@ -2,8 +2,6 @@ import { createGlobalStyle } from 'styled-components';
 import theme from './theme';
 
 const GlobalStyles = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
-
   * {
     box-sizing: border-box;
     margin: 0;
@@ -132,6 +130,41 @@ const GlobalStyles = createGlobalStyle`
   .grid {
     display: grid;
     grid-gap: ${theme.spacing.md};
+  }
+  
+  /* Accessibility Styles */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  :focus {
+    outline: 2px solid ${theme.colors.primary};
+    outline-offset: 2px;
+  }
+  
+  .high-contrast {
+    filter: contrast(1.5);
+  }
+  
+  /* Font size adjustment classes */
+  .text-normal {
+    font-size: 1rem;
+  }
+  
+  .text-large {
+    font-size: 1.2rem;
+  }
+  
+  .text-xl {
+    font-size: 1.4rem;
   }
 `;
 

@@ -192,9 +192,9 @@ const QuickLearning = () => {
     setTimerActive(false);
     
     if (sprintResponse.trim()) {
-      // Submit the response to AI for feedback
+      // Submit the response to AI for feedback with both prompt and response
       await handleSendMessage(
-        `Sprint Writing Response:\n\n${sprintResponse}\n\nPlease analyze my writing and provide feedback.`
+        `Sprint Writing:\n\nPrompt: ${sprintPrompt}\n\nMy Response:\n${sprintResponse}\n\nPlease analyze my writing based on the prompt. Provide specific feedback on content, structure, style, and how well I addressed the prompt. Suggest improvements and highlight my strengths.`
       );
       
       // Award extra points for completing a sprint
@@ -399,6 +399,7 @@ const QuickLearning = () => {
         messages={messages}
         onSendMessage={handleSendMessage}
         onStarterClick={handleStarterClick}
+        isThinking={isLoading}
       />
       
       {timerActive && (

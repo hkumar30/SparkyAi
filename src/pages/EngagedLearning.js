@@ -230,6 +230,7 @@ const EngagedLearning = () => {
       messages={messages}
       onSendMessage={handleSendMessage}
       onStarterClick={handleStarterClick}
+      isThinking={isLoading}
     />
   );
 };

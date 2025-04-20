@@ -5,6 +5,7 @@ import theme from './styles/theme';
 import GlobalStyles from './styles/GlobalStyles';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { setRedirectPath } from './utils/authUtils';
+import AccessibilityControls from './components/common/AccessibilityControls';
 
 // Pages
 import Home from './pages/Home';
@@ -14,6 +15,7 @@ import EngagedLearning from './pages/EngagedLearning';
 import QuickLearning from './pages/QuickLearning';
 import Leaderboard from './pages/Leaderboard';
 import Achievements from './pages/Achievements';
+import Profile from './pages/Profile';
 
 // Components
 import Navbar from './components/common/Navbar';
@@ -80,9 +82,19 @@ function App() {
               } 
             />
             
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Redirect any other route to home */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
+          <AccessibilityControls />
         </Router>
       </AuthProvider>
     </ThemeProvider>
