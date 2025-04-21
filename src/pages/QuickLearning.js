@@ -234,8 +234,12 @@ const QuickLearning = () => {
       // Create system message for Quick Learning mode
       const systemMessage = `You are Sparky AI, an educational AI writing assistant designed to help college students improve their writing skills. You are in "Quick Learning" mode, which means you should provide more direct feedback and actual corrections compared to "Engaged Learning" mode. Still make your responses educational, but focus on efficiency and practical improvements. Be friendly, encouraging, and helpful.`;
       
-      // Get AI response from OpenAI
-      const aiResponse = await sendMessageToOpenAI(systemMessage, userText);
+      // Get AI response from OpenAI with conversation history
+      const aiResponse = await sendMessageToOpenAI(
+        systemMessage, 
+        userText,
+        messages // Pass the current messages array as conversation history
+      );
       
       // Add AI message to state
       const botMessage = {
@@ -257,8 +261,6 @@ const QuickLearning = () => {
       
       // Award points for interaction
       updatePoints(2);
-      
-      return aiResponse;
     } catch (error) {
       console.error('Error generating AI response:', error);
       throw error;

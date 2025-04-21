@@ -314,18 +314,30 @@ const AttachmentLabel = styled.label`
 `;
 
 // Add this function to process text formatting
+
 const formatMessage = (text) => {
-  // Convert basic Markdown-style formatting
+  // First handle the hash-based headings properly
   let formattedText = text;
+  
+  // Convert heading formats (h1, h2, h3, etc)
+  formattedText = formattedText.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+  formattedText = formattedText.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+  formattedText = formattedText.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
   
   // Convert line breaks to paragraphs
   formattedText = formattedText
     .split('\n\n')
-    .map(paragraph => paragraph.trim() ? `<p>${paragraph}</p>` : '')
+    .map(paragraph => {
+      // Skip if already wrapped in HTML tags
+      if (paragraph.trim().startsWith('<') && paragraph.trim().endsWith('>')) {
+        return paragraph;
+      }
+      return paragraph.trim() ? `<p>${paragraph}</p>` : '';
+    })
     .join('');
   
   // Convert single line breaks within paragraphs
-  formattedText = formattedText.replace(/<p>(.*?)\n(.*?)<\/p>/g, '<p>$1<br />$2</p>');
+  formattedText = formattedText.replace(/<p>(.*?)\n(.*?)<\/p>/gs, '<p>$1<br />$2</p>');
   
   // Convert bold text
   formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -334,17 +346,76 @@ const formatMessage = (text) => {
   formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
   
   // Convert bullet lists
-  const bulletListRegex = /<p>- (.*?)(?:<\/p>|$)/g;
-  if (formattedText.match(bulletListRegex)) {
-    formattedText = formattedText.replace(/<p>- (.*?)<\/p>/g, '<li>$1</li>');
-    formattedText = formattedText.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+  formattedText = formattedText.replace(/<p>- (.*?)<\/p>/g, '<li>$1</li>');
+  formattedText = formattedText.replace(/<p>• (.*?)<\/p>/g, '<li>$1</li>');
+  
+  // Wrap consecutive list items in <ul> tags
+  let hasLists = formattedText.includes('<li>');
+  if (hasLists) {
+    // Split by <li> and <p> or heading tags
+    const parts = formattedText.split(/(?=<li>|<p>|<h[1-6]>)/);
+    let inList = false;
+    let result = '';
+    
+    for (const part of parts) {
+      if (part.startsWith('<li>')) {
+        if (!inList) {
+          result += '<ul>';
+          inList = true;
+        }
+        result += part;
+      } else {
+        if (inList) {
+          result += '</ul>';
+          inList = false;
+        }
+        result += part;
+      }
+    }
+    
+    if (inList) {
+      result += '</ul>';
+    }
+    
+    formattedText = result;
   }
   
   // Convert numbered lists
-  const numberedListRegex = /<p>\d+\. (.*?)(?:<\/p>|$)/g;
-  if (formattedText.match(numberedListRegex)) {
-    formattedText = formattedText.replace(/<p>\d+\. (.*?)<\/p>/g, '<li>$1</li>');
-    formattedText = formattedText.replace(/(<li>.*?<\/li>)+/g, '<ol>$&</ol>');
+  formattedText = formattedText.replace(/<p>(\d+)\. (.*?)<\/p>/g, '<li>$2</li>');
+  
+  // Wrap consecutive numbered list items in <ol> tags
+  hasLists = formattedText.includes('<li>') && /\d+\.\s/.test(text);
+  if (hasLists) {
+    // Create a temporary marker for numbered list items
+    formattedText = formattedText.replace(/<p>(\d+)\. (.*?)<\/p>/g, '<num-li>$2</num-li>');
+    
+    // Split by <num-li> and <p> or heading tags
+    const parts = formattedText.split(/(?=<num-li>|<p>|<h[1-6]>)/);
+    let inList = false;
+    let result = '';
+    
+    for (const part of parts) {
+      if (part.startsWith('<num-li>')) {
+        if (!inList) {
+          result += '<ol>';
+          inList = true;
+        }
+        // Convert back to normal <li>
+        result += part.replace('<num-li>', '<li>').replace('</num-li>', '</li>');
+      } else {
+        if (inList) {
+          result += '</ol>';
+          inList = false;
+        }
+        result += part;
+      }
+    }
+    
+    if (inList) {
+      result += '</ol>';
+    }
+    
+    formattedText = result;
   }
   
   return formattedText;

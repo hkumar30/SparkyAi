@@ -62,8 +62,12 @@ const EngagedLearning = () => {
       // Create system message for Engaged Learning mode
       const systemMessage = `You are Sparky AI, an educational AI writing assistant designed to help college students improve their writing skills. Your responses should be educational and focused on teaching writing concepts rather than just fixing mistakes. Remember that you are in the "Engaged Learning" mode which is more focused on deeper learning rather than quick fixes. Be encouraging, friendly, and provide specific feedback that helps students understand the principles behind good writing.`;
       
-      // Get AI response from OpenAI
-      const aiResponse = await sendMessageToOpenAI(systemMessage, userText);
+      // Get AI response from OpenAI with conversation history
+      const aiResponse = await sendMessageToOpenAI(
+        systemMessage, 
+        userText,
+        messages // Pass the current messages array as conversation history
+      );
       
       // Add AI message to state
       const botMessage = {
