@@ -13,16 +13,24 @@ Sparky AI is an educational writing assistant that gamifies the process of writi
   - Points system for engagement and participation
   - Achievements for reaching various milestones
   - Leaderboard to compete with other users
+  - Visual achievement notifications
 
 - **AI-Powered Assistance**:
   - Smart feedback that teaches writing concepts
+  - Conversation memory that maintains context between messages
   - Personalized help based on uploaded documents
   - Timed writing sprints with prompt generation
+
+- **Process Writing**:
+  - Step-by-step guidance through the writing process
+  - Structured framework for larger writing projects
+  - Targeted questions to help develop and refine ideas
 
 - **User-Friendly Interface**:
   - Clean, intuitive design with ASU brand colors (#8C1D40, #FFC627)
   - Responsive layout for desktop and mobile devices
-  - Easy document and image upload functionality
+  - Accessibility features including text size adjustment and contrast settings
+  - Time tracking that measures active writing sessions
 
 ## Tech Stack
 
@@ -116,6 +124,7 @@ sparky-ai/
 │   │   │   └── ThinkingIndicator.js
 │   │   └── common/
 │   │       ├── AccessibilityControls.js
+│   │       ├── AchievementNotification.js
 │   │       ├── Button.js
 │   │       └── Navbar.js
 │   ├── contexts/
@@ -152,6 +161,7 @@ sparky-ai/
 - Advanced analytics: Track writing improvement over time
 - Mobile app version for iOS and Android
 - Integration with educational platforms and LMS
+- Enhanced NLP capabilities for more tailored feedback
 
 ## Contributing
 
