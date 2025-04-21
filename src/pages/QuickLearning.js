@@ -197,7 +197,9 @@ const QuickLearning = () => {
     setTimerActive(false);
     
     if (sprintResponse.trim()) {
-      // Submit the response to AI for feedback with both prompt and response
+      // Calculate actual time spent (10 minutes minus remaining time)
+      const actualTimeSpent = Math.ceil((600 - timerSeconds) / 60); // Convert seconds to minutes
+      
       await handleSendMessage(
         `Sprint Writing:\n\nPrompt: ${sprintPrompt}\n\nMy Response:\n${sprintResponse}\n\nPlease analyze my writing based on the prompt. Provide specific feedback on content, structure, style, and how well I addressed the prompt. Suggest improvements and highlight my strengths.`
       );
@@ -205,9 +207,12 @@ const QuickLearning = () => {
       // Award extra points for completing a sprint
       updatePoints(10);
       
-      // Update metrics
+      // Update metrics with actual time spent and word count
       const wordCount = sprintResponse.trim().split(/\s+/).length;
-      updateMetrics({ wordsWritten: wordCount, timeSpent: 10 }); // 10 minutes
+      updateMetrics({ 
+        wordsWritten: wordCount, 
+        timeSpent: actualTimeSpent // Use actual time instead of fixed 10 minutes
+      });
       
       // Check for sprint writing achievement
       addAchievement({

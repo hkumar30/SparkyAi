@@ -112,18 +112,12 @@ const MessageBubble = styled.div`
   /* Formatting for paragraphs */
   p {
     margin-bottom: 0.8em;
-    line-height: 1.5;
-  }
-  
-  p:last-child {
-    margin-bottom: 0;
   }
   
   /* Formatting for lists */
   ul, ol {
     margin-left: 1.5em;
     margin-bottom: 0.8em;
-    margin-top: 0.8em;
   }
   
   li {
@@ -131,14 +125,10 @@ const MessageBubble = styled.div`
   }
   
   /* Formatting for headings */
-  h3 {
+  h3, h4 {
     margin-top: 1em;
     margin-bottom: 0.5em;
     font-weight: 600;
-    font-size: 1.2em;
-    color: ${props => props.isUser ? 'white' : props.theme.colors.primary};
-    border-bottom: 1px solid ${props => props.isUser ? 'rgba(255,255,255,0.2)' : props.theme.colors.lightGrey};
-    padding-bottom: 0.3em;
   }
   
   /* Formatting for code */
@@ -163,15 +153,6 @@ const MessageBubble = styled.div`
     padding-left: 1em;
     margin-left: 0;
     margin-bottom: 0.8em;
-    font-style: italic;
-  }
-  
-  /* Formatting for strong and emphasis */
-  strong {
-    font-weight: 600;
-  }
-  
-  em {
     font-style: italic;
   }
 `;
@@ -332,101 +313,38 @@ const AttachmentLabel = styled.label`
   }
 `;
 
-// Function to format message text
+// Add this function to process text formatting
 const formatMessage = (text) => {
-  // First, handle headings - replace ### with actual heading tags
-  let formattedText = text.replace(/###\s*([^\n]+)/g, '<h3>$1</h3>');
+  // Convert basic Markdown-style formatting
+  let formattedText = text;
   
-  // Replace bold text
-  formattedText = formattedText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Convert line breaks to paragraphs
+  formattedText = formattedText
+    .split('\n\n')
+    .map(paragraph => paragraph.trim() ? `<p>${paragraph}</p>` : '')
+    .join('');
   
-  // Replace italic text
-  formattedText = formattedText.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // Convert single line breaks within paragraphs
+  formattedText = formattedText.replace(/<p>(.*?)\n(.*?)<\/p>/g, '<p>$1<br />$2</p>');
   
-  // Handle paragraphs (split by double newlines)
-  const paragraphs = formattedText.split(/\n\n+/);
-  formattedText = paragraphs.map(para => {
-    // Skip if already wrapped in HTML tags
-    if (para.trim().startsWith('<') && para.trim().endsWith('>')) {
-      return para;
-    }
-    return `<p>${para}</p>`;
-  }).join('');
+  // Convert bold text
+  formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   
-  // Handle single newlines within paragraphs
-  formattedText = formattedText.replace(/<p>(.+?)\n(.+?)<\/p>/gs, '<p>$1<br>$2</p>');
+  // Convert italic text
+  formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
   
-  // Handle bullet points
-  formattedText = formattedText.replace(/<p>- (.+?)<\/p>/g, '<li>$1</li>');
-  formattedText = formattedText.replace(/<p>• (.+?)<\/p>/g, '<li>$1</li>');
-  
-  // Wrap consecutive list items in <ul> tags
-  let hasLists = formattedText.includes('<li>');
-  if (hasLists) {
-    // Split by <li> and <p> tags
-    const parts = formattedText.split(/(?=<li>|<p>)/);
-    let inList = false;
-    let result = '';
-    
-    for (const part of parts) {
-      if (part.startsWith('<li>')) {
-        if (!inList) {
-          result += '<ul>';
-          inList = true;
-        }
-        result += part;
-      } else {
-        if (inList) {
-          result += '</ul>';
-          inList = false;
-        }
-        result += part;
-      }
-    }
-    
-    if (inList) {
-      result += '</ul>';
-    }
-    
-    formattedText = result;
+  // Convert bullet lists
+  const bulletListRegex = /<p>- (.*?)(?:<\/p>|$)/g;
+  if (formattedText.match(bulletListRegex)) {
+    formattedText = formattedText.replace(/<p>- (.*?)<\/p>/g, '<li>$1</li>');
+    formattedText = formattedText.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
   }
   
-  // Handle numbered lists
-  formattedText = formattedText.replace(/<p>(\d+)\. (.+?)<\/p>/g, '<li>$2</li>');
-  
-  // Wrap consecutive numbered list items in <ol> tags
-  hasLists = formattedText.includes('<li>') && /\d+\.\s/.test(text);
-  if (hasLists) {
-    // Create a temporary marker for numbered list items
-    formattedText = formattedText.replace(/<p>(\d+)\. (.+?)<\/p>/g, '<num-li>$2</num-li>');
-    
-    // Split by <num-li> and <p> tags
-    const parts = formattedText.split(/(?=<num-li>|<p>)/);
-    let inList = false;
-    let result = '';
-    
-    for (const part of parts) {
-      if (part.startsWith('<num-li>')) {
-        if (!inList) {
-          result += '<ol>';
-          inList = true;
-        }
-        // Convert back to normal <li>
-        result += part.replace('<num-li>', '<li>').replace('</num-li>', '</li>');
-      } else {
-        if (inList) {
-          result += '</ol>';
-          inList = false;
-        }
-        result += part;
-      }
-    }
-    
-    if (inList) {
-      result += '</ol>';
-    }
-    
-    formattedText = result;
+  // Convert numbered lists
+  const numberedListRegex = /<p>\d+\. (.*?)(?:<\/p>|$)/g;
+  if (formattedText.match(numberedListRegex)) {
+    formattedText = formattedText.replace(/<p>\d+\. (.*?)<\/p>/g, '<li>$1</li>');
+    formattedText = formattedText.replace(/(<li>.*?<\/li>)+/g, '<ol>$&</ol>');
   }
   
   return formattedText;
@@ -444,13 +362,67 @@ const ChatLayout = ({
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { currentUser, userProfile, updatePoints } = useAuth();
+  const { currentUser, userProfile, updatePoints, updateMetrics } = useAuth();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   
+  // Add time tracking state
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingStartTime, setTypingStartTime] = useState(null);
+  const [totalTypingSeconds, setTotalTypingSeconds] = useState(0);
+  const typingTimerRef = useRef(null);
+  const TYPING_TIMEOUT = 3000; // 3 seconds of inactivity to consider typing stopped
+  const MINIMUM_TRACKING_THRESHOLD = 10; // Minimum seconds to track (to avoid micro-interactions)
+  
   const handleInputChange = (e) => {
     setMessageInput(e.target.value);
+    
+    const currentTime = Date.now();
+    
+    // Start tracking typing time if not already tracking
+    if (!isTyping) {
+      console.log('Typing started');
+      setIsTyping(true);
+      setTypingStartTime(currentTime);
+    }
+    
+    // Clear existing timer and set a new one
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+    }
+    
+    // Set a timer to track when typing stops
+    typingTimerRef.current = setTimeout(() => {
+      // User stopped typing for TYPING_TIMEOUT ms
+      if (isTyping && typingStartTime) {
+        const endTime = Date.now();
+        const sessionSeconds = Math.floor((endTime - typingStartTime) / 1000);
+        
+        console.log(`Typing stopped. Session duration: ${sessionSeconds} seconds`);
+        
+        // Only count sessions longer than the minimum threshold
+        if (sessionSeconds >= MINIMUM_TRACKING_THRESHOLD) {
+          const newTotalSeconds = totalTypingSeconds + sessionSeconds;
+          setTotalTypingSeconds(newTotalSeconds);
+          
+          console.log(`Total typing time: ${newTotalSeconds} seconds`);
+          
+          // Only update the database every 60 seconds to reduce writes
+          if (Math.floor(newTotalSeconds / 60) > Math.floor(totalTypingSeconds / 60)) {
+            const minutesToRecord = Math.floor(sessionSeconds / 60);
+            if (minutesToRecord > 0 && updateMetrics) {
+              console.log(`Recording ${minutesToRecord} minutes to database`);
+              updateMetrics({ timeSpent: minutesToRecord });
+            }
+          }
+        }
+        
+        // Reset typing state
+        setIsTyping(false);
+        setTypingStartTime(null);
+      }
+    }, TYPING_TIMEOUT);
   };
   
   const handleKeyDown = (e) => {
@@ -516,6 +488,31 @@ const ChatLayout = ({
       setIsMenuOpen(false);
     }
   };
+  
+  // Clean up typing timer on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up typing timer
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+        
+        // Handle case where component unmounts while user is typing
+        if (isTyping && typingStartTime) {
+          const endTime = Date.now();
+          const sessionSeconds = Math.floor((endTime - typingStartTime) / 1000);
+          
+          // Only count sessions longer than the minimum threshold
+          if (sessionSeconds >= MINIMUM_TRACKING_THRESHOLD) {
+            const minutesToRecord = Math.floor(sessionSeconds / 60);
+            if (minutesToRecord > 0 && updateMetrics) {
+              console.log(`Recording ${minutesToRecord} minutes on unmount`);
+              updateMetrics({ timeSpent: minutesToRecord });
+            }
+          }
+        }
+      }
+    };
+  }, [isTyping, typingStartTime, totalTypingSeconds, updateMetrics]);
   
   // Scroll to the bottom of messages when messages change
   useEffect(() => {

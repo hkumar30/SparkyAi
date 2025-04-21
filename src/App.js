@@ -6,6 +6,7 @@ import GlobalStyles from './styles/GlobalStyles';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { setRedirectPath } from './utils/authUtils';
 import AccessibilityControls from './components/common/AccessibilityControls';
+import AchievementNotification from './components/common/AchievementNotification';
 
 // Pages
 import Home from './pages/Home';
@@ -32,6 +33,18 @@ const ProtectedRoute = ({ children }) => {
   }
   
   return children;
+};
+
+// Achievement notifications wrapper
+const AchievementNotificationWrapper = () => {
+  const { recentAchievements, dismissAchievementNotification } = useAuth();
+  
+  return (
+    <AchievementNotification 
+      achievements={recentAchievements} 
+      onClose={dismissAchievementNotification} 
+    />
+  );
 };
 
 function App() {
@@ -94,6 +107,10 @@ function App() {
             {/* Redirect any other route to home */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
+          
+          {/* Achievement Notifications */}
+          <AchievementNotificationWrapper />
+          
           <AccessibilityControls />
         </Router>
       </AuthProvider>

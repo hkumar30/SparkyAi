@@ -22,6 +22,9 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Add state for achievement notifications
+  const [recentAchievements, setRecentAchievements] = useState([]);
 
   // Register a new user
   const register = async (email, password, displayName) => {
@@ -147,7 +150,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Add achievement
   const addAchievement = async (achievement) => {
     if (!currentUser) return;
     
@@ -161,10 +163,12 @@ export const AuthProvider = ({ children }) => {
         
         // Check if achievement already exists
         if (!achievements.some(a => a.id === achievement.id)) {
-          const newAchievements = [...achievements, {
+          const newAchievement = {
             ...achievement,
             earnedAt: new Date()
-          }];
+          };
+          
+          const newAchievements = [...achievements, newAchievement];
           
           await setDoc(userRef, { 
             ...userData, 
@@ -178,6 +182,9 @@ export const AuthProvider = ({ children }) => {
             points: (prev.points || 0) + (achievement.points || 0)
           }));
           
+          // Add to recent achievements for notification
+          setRecentAchievements(prev => [...prev, newAchievement]);
+          
           return newAchievements;
         }
       }
@@ -185,7 +192,12 @@ export const AuthProvider = ({ children }) => {
       console.error('Error adding achievement:', error);
     }
   };
-
+  
+  // Add a function to dismiss achievement notifications
+  const dismissAchievementNotification = (achievementId) => {
+    setRecentAchievements(prev => prev.filter(a => a.id !== achievementId));
+  };
+  
   // Observer for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -220,7 +232,9 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updatePoints,
     updateMetrics,
-    addAchievement
+    addAchievement,
+    recentAchievements,
+    dismissAchievementNotification
   };
 
   return (
