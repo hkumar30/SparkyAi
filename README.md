@@ -51,8 +51,8 @@ Sparky AI is an educational writing assistant that gamifies the process of writi
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/sparky-ai.git
-   cd sparky-ai
+   git clone https://github.com/hkumar30/SparkyAi.git
+   cd SparkyAi
    ```
 
 2. Install dependencies:
