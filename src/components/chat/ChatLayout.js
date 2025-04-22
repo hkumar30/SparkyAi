@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaPaperPlane, FaBolt, FaTimes, FaBars, FaFile, FaImage } from 'react-icons/fa';
+import { FaPaperPlane, FaBolt, FaTimes, FaBars, FaFile, FaImage, FaPaperclip, FaGlobe } from 'react-icons/fa';
 import Button from '../common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../firebase/config';
@@ -181,27 +181,112 @@ const ChatInputContainer = styled.div`
   border-top: 1px solid ${props => props.theme.colors.midGrey};
 `;
 
+const InputActionsRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+  margin-bottom: ${props => props.theme.spacing.sm};
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
+  background-color: ${props => props.active ? `${props.theme.colors.lightPrimary}30` : 'transparent'};
+  border: 1px solid ${props => props.active ? props.theme.colors.primary : props.theme.colors.midGrey};
+  border-radius: ${props => props.theme.borderRadius.md};
+  color: ${props => props.active ? props.theme.colors.primary : props.theme.colors.darkGrey};
+  font-size: 0.9rem;
+  font-weight: ${props => props.active ? '600' : '400'};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: ${props => props.active ? `${props.theme.colors.lightPrimary}30` : props.theme.colors.lightGrey};
+    border-color: ${props => props.active ? props.theme.colors.primary : props.theme.colors.darkGrey};
+  }
+  
+  svg {
+    font-size: 1rem;
+  }
+`;
+
+const UploadButton = styled(ActionButton)`
+  padding: ${props => props.theme.spacing.xs};
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+`;
+
 const ChatInputWrapper = styled.div`
   display: flex;
   gap: ${props => props.theme.spacing.sm};
   position: relative;
+  border: 1px solid ${props => props.theme.colors.midGrey};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing.xs};
+  transition: border-color 0.2s ease;
+  
+  &:focus-within {
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 0 0 2px ${props => `${props.theme.colors.primary}20`};
+  }
 `;
 
 const TextArea = styled.textarea`
   flex: 1;
-  padding: ${props => props.theme.spacing.md};
-  border-radius: ${props => props.theme.borderRadius.lg};
-  border: 1px solid ${props => props.theme.colors.midGrey};
+  padding: ${props => props.theme.spacing.sm};
+  border-radius: ${props => props.theme.borderRadius.md};
+  border: none;
   font-family: ${props => props.theme.fonts.body};
   resize: none;
-  height: 60px;
+  height: 24px;
+  min-height: 24px;
   max-height: 150px;
   transition: ${props => props.theme.transition.fast};
   
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => `${props.theme.colors.primary}30`};
+  }
+`;
+
+const Tooltip = styled.div`
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 100;
+  pointer-events: none;
+  margin-bottom: 6px;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+  }
+`;
+
+const TooltipWrapper = styled.div`
+  position: relative;
+  
+  &:hover ${Tooltip} {
+    opacity: 1;
+    visibility: visible;
   }
 `;
 
@@ -284,37 +369,11 @@ const StarterButton = styled.button`
   }
 `;
 
-const AttachmentButtons = styled.div`
-  display: none;  /* Temporarily disabled */
-  gap: ${props => props.theme.spacing.xs};
-  margin-top: ${props => props.theme.spacing.sm};
-`;
-
 const AttachmentInput = styled.input`
   display: none;
 `;
 
-const AttachmentLabel = styled.label`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  background-color: ${props => props.theme.colors.lightGrey};
-  border-radius: ${props => props.theme.borderRadius.md};
-  cursor: pointer;
-  transition: ${props => props.theme.transition.fast};
-  
-  &:hover {
-    background-color: ${props => props.theme.colors.midGrey};
-  }
-  
-  svg {
-    margin-right: ${props => props.theme.spacing.xs};
-  }
-`;
-
-// Add this function to process text formatting
-
+// Format message for display
 const formatMessage = (text) => {
   // First handle the hash-based headings properly
   let formattedText = text;
@@ -438,6 +497,9 @@ const ChatLayout = ({
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   
+  // Add state for button toggles
+  const [asuLibraryActive, setAsuLibraryActive] = useState(false);
+  
   // Add time tracking state
   const [isTyping, setIsTyping] = useState(false);
   const [typingStartTime, setTypingStartTime] = useState(null);
@@ -560,6 +622,20 @@ const ChatLayout = ({
     }
   };
   
+  // Handle file upload click
+  const handleUploadClick = () => {
+    // For now just log a message as this is a visual-only feature
+    console.log('Upload button clicked');
+    // In the future, this would trigger the file input
+    // fileInputRef.current.click();
+  };
+  
+  // Handle ASU Library click
+  const handleLibraryClick = () => {
+    setAsuLibraryActive(!asuLibraryActive);
+    console.log('ASU Library button clicked, active state:', !asuLibraryActive);
+  };
+  
   // Clean up typing timer on unmount
   useEffect(() => {
     return () => {
@@ -661,6 +737,26 @@ const ChatLayout = ({
               </AttachmentPreview>
             )}
             
+            <InputActionsRow>
+              <TooltipWrapper>
+                <UploadButton onClick={handleUploadClick}>
+                  <FaPaperclip />
+                  <Tooltip>Upload files</Tooltip>
+                </UploadButton>
+              </TooltipWrapper>
+              
+              <TooltipWrapper>
+                <ActionButton 
+                  active={asuLibraryActive}
+                  onClick={handleLibraryClick}
+                >
+                  <FaGlobe />
+                  ASU Library
+                  <Tooltip>Search ASU Library resources</Tooltip>
+                </ActionButton>
+              </TooltipWrapper>
+            </InputActionsRow>
+            
             <ChatInputWrapper>
               <TextArea
                 placeholder="Type your message..."
@@ -677,7 +773,12 @@ const ChatLayout = ({
               </Button>
             </ChatInputWrapper>
             
-            {/* File upload functionality disabled - Firebase Spark plan limitation */}
+            {/* Hidden file inputs for future functionality */}
+            <AttachmentInput 
+              type="file" 
+              ref={fileInputRef}
+              onChange={(e) => handleFileUpload(e, 'file')}
+            />
           </ChatInputContainer>
         </ChatMessagesWrapper>
         
