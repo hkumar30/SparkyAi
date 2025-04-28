@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { FaBolt, FaRocket, FaLightbulb, FaTrophy } from 'react-icons/fa';
 import Button from '../components/common/Button';
+import AwardBanner from '../components/common/AwardBanner';
 import { useAuth } from '../contexts/AuthContext';
 import { setRedirectPath } from '../utils/authUtils';
 
@@ -293,7 +294,7 @@ const Home = () => {
           <Title>Sparky AI</Title>
         </LogoContainer>
         <Tagline>Make Writing Fun Again</Tagline>
-        
+        <AwardBanner />
         <VideoSection>
           {!videoPlaying && (
             <>
